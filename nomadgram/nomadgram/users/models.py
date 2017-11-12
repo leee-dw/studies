@@ -7,12 +7,14 @@ from django.utils.translation import ugettext_lazy as _
 
 @python_2_unicode_compatible
 class User(AbstractUser):
-    
+   
+   # User Model
+
     GENDER_CHOICES = (
       ('male', 'Male'),
       ('femail', 'Female'),
       ('not-specified', 'Not Sepcified')
-      )
+    )
 
     # First Name and Last Name do not cover name patterns
     # around the globe.
