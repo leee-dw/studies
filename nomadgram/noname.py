@@ -5,10 +5,8 @@ class Cat():
 
 class KoreanShortHair(Cat):
   legs = 3
-  breed = 'british'
-  name = 'nabi'
+  breed = "british"
+  name = "nabi"
 
-KoreanShortHair.legs  # 3
-KoreanShortHair.eyes  # 2
-KoreanShortHair.breed # british
-Cat.breed             # error
+
+print(KoreanShortHair.eyes)
