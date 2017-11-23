@@ -403,6 +403,84 @@ C 언어 유형의 구문을 가진 모든 언어는 블록 유효 범위가 있
 
 오늘날 대부분의 언어에서는 변수를 가능한 늦게, 즉 처음 사용하기 바로 전에 선언해서 사용할 것을 권하고 있습니다. 하지만 자바스크립트에서는 블록 유효범위를 지원하지 않기 때문에 이러한 권고가 적용되지 않습니다. 대신에 자바스크립트에서는 함수에서 사용하는 모든 변수를 함수 첫 부분에서 선언하는 것이 최선의 방법입니다.
 
+## 클로저(closure)
+
+유효범위에 관한 좋은 소식 하나는 내부 함수에서 자신을 포함하고 있는 외부 함수의 매개변수와 변수들을 접근할 수 있다는 것입니다(this와 arguments는 예외입니다). 이러한 특성은 매우 유용합니다.
+
+내부 함수에서 외부 함수의 변수에 접근할 수 있는 예는 앞서 재귀적 호출에서 살펴봤던 getElementsByAttribute 함수에서 볼 수 있습니다. 이 함수에는 results라는 변수가 선언돼 있는데 이 results라는 변수를 walk_the_DOM의 인수로 넘긴 (내부) 함수에서 접근하고 있습니다.
+
+이러한 특성과 관려하여 더 흥미로운 경우는 외부 함수보다 내부 함수가 더 오래 유지될 때입니다.
+
+03. 호출 절에서 value라는 속성과 increment라는 메소드를 가진 myObject를 살펴봤습니다. 이제 myObject 객체에서 허락되지 않은 경우에는 value 속성의 값을 변경할 수 없게 하고 싶다고 가정해 보겠습니다.
+
+myObject를 객체 리터럴로 초기화하는 대신에 다음에 나오는 코드처럼 객체 리터럴을 반환하는 함수를 호출하여 초기화합니다. 이렇게 하면 increment와 getValue를 통해 value라는 변수에 접근할 수 있지만 함수 유효범위 때문에 프로그램의 나머지 부분에서는 접근할 수가 없습니다.
+
+```javascript
+var myObject = function () {
+  var value = 0;
+
+  return {
+    increment: function (inc) {
+      value += typeof inc === 'number' ? inc: 1;
+    },
+    getValue: function () {
+      return value;
+    }
+  };
+}();
+```
+
+코드를 잘 살펴보면 myObjec변t에 함수를 할당한 것이 아니라 함수를 호출한 결과를 호출한 결과를 할당하고 있습니다. 맨 마지막 줄에 있는 ()를 주목할 필요가 있습니다. 함수는 메소드 두 개를 가진 객체를 반환하며 이 두 메소드는 계속해서 value라는 변수에 접근할 수 있습니다.
+
+03절의 생성자 호출 패턴에서 살펴봤던 Quo 생성자는 status라는 속성과 get_status라는 메소드를 가진 객체를 생성합니다. 하지만 status라는 변수를 바로 접근할 수 있기 때문에 getter 역할을 하는 get_status는 별 쓸모가 없어 보입니다. get_status가 쓸모 가 있으려면 status 속성이 private이어야 할 것입니다. 그러면 이제 그렇게 되도록 quo라는 함수를 정의해 보겠습니다. 
+
+```javascript
+// quo 라는 함수를 생성
+// 이 함수는 get_status라는 메소드와
+// status라는 private 속성을 가진 객체를 반환
+
+var quo = function (status) {
+  return {
+    get_status: function(){
+      return status;
+    }
+  };
+};
+
+// quo의 인스턴스를 실행
+
+var myQuo = quo("amazed");
+
+document.writeln(myQuo.get_status());
+```
+
+quo 함수는 new 키워드 없이 사용하게 설계됐습니다. 그래서 이름을 대문자로 표기하지 않았습니다. quo를 호출하면 get_status 메소드가 있는 객체를 반환합니다. 이 객체에 대한 참조는 myQuo에 저장됩니다. get_status 메소드는 quo가 이미 반환된 뒤에도 quo의 status에 계속해서 접근할 수 있는 권한을 가지게 됩니다. get_status는 status 매개변수의 복사본에 접근할 수 있는 권한을 갖는 것이 아니라 매개변수 그 자체에 대한 접근 권한을 갖습니다. 이러한 것이 가능한 것은 함수가 자신이 생성된 함수, 즉 자신을 내포하는 함수의 문맥(context)에 접근할 수 있기 때문입니다. 이러한 것을 `클로저(closure)`라고 부릅니다.
+
+좀 더 유용한 예제를 살펴보겠습니다.
+
+```javascript
+
+var fade = function (node) {
+  var level = 1;
+  var step = function() {
+    var hex = level.toString(16);
+    node.stylebackgroundColor = '#FFFF' + hex + hex;
+    if (level < 15) {
+      level += 1;
+      setTimeout(step, 100);
+    }
+  };
+  setTimeout(step, 100);
+};
+fade(document.body);
+```
+
+
+
+
+
+
+
 
 
 
