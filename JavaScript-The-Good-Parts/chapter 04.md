@@ -157,3 +157,262 @@ var status = Quo.prototype.get_status.apply(statusObject);
 ```
 
 ## 인수 배열 (argument)
+
+함수를 호출할 때 추가적으로 매개변수로 arguments라는 배열을 사용할 수 있습니다. 이 배열은 함수를 호출할 때 전달된 모든 인수를 접근할 수 있게 합니다. 여기에는 매개변수 개수보다 더 많이 전달된 인수들도 모두 포함합니다. 이 arguments라는 매개변수는 매개변수의 개수를 정확히 정해놓지 않고, 넘어오는 인수의 개수에 맞춰서 동작하는 함수를 만들 수 있게 합니다.
+
+
+```javascript
+  // 여러 작업을 수행하는 함수를 만듦.
+
+  // 함수 내부에 있는 sum이라는 변수는
+  // 외부에 있는 sum 변수에 영향을 미치지 않는 것에 주목.
+  // 함수는 오로지 내부의 sum에만 영향을 미침
+
+  var sum = function(){
+    var i, sum = 0;
+    for(i = 0; i < arguments.length; i+=1) {
+      sum += arguments[i];
+    }
+    return sum;
+  };
+
+  document.writeln(sum(4, 8, 15, 16, 23, 42)); // 108
+```
+
+이 예제는 그다지 유용한 패턴은 아닙니다. 
+
+설계상의 문제로 arguments는 실제 배열은 아닙니다. arguments는 배열 같은 객체입니다. 왜냐하면 arguments는 length라는 속성이 있지만 모든 배열이 가지는 메소드들은 없습니다. 이 장의 마지막에서 이러한 설계상의 오류로 인한 결과를 보게 될 것입니다.
+
+## 반환
+
+함수를 호출하면 첫 번째 문장부터 실행해서, 함수의 몸체를 닫는  }를 만나면 끝납니다. 함수가 끝나면 프로그램의 제어가 함수를 호출한 부분으로 반환됩니다. return 문은 함수의 끝에 도달하기 전에 제어를 반환할 수 있습니다. return 문을 실행하면 함수는 나머지 부분을 실행하지 않고 그 즉시 반환됩니다.
+
+함수는 항상 값을 반환합니다. 반환값이 지정되지 않은 경우에는 undefined가 반환됩니다. 함수를 new라는 전치 연산자와 함께 실행하고 반환값이 객체가 아닌 경우 반환값은 this(새로운 객체)가 됩니다.
+
+
+## 예외
+
+자바스크립트는 예외를 다룰 수 있는 메커니즘을 제공합니다. 예외는 정상적인 프로그램의 흐름을 방해하는 비정상적인 사고입니다(완전히 예측 불가능한 것은 아닙니다). 이러한 사고가 발생하면 프로그램은 예외를 발생합니다.
+
+```javascript
+var add = function(a, b) {
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    throw {
+      name: 'TypeError',
+      message: 'add needs numbers'
+    };
+  }
+  return a + b;
+}
+```
+
+throw 문은 함수의 실행을 중단합니다. throw 문은 어떤 예외인지 알 수 있게 해주는 name 속성과 예외에 대해 설명하는 message 속성을 가진 예외 객체를 반환해야 합니다. 물론 이 반환 객체에 필요한 속성이 더 있는 경우 추가할 수 있습니다.
+
+예외 객체는 try 문의 catch 절에 전달됩니다.
+
+```javascript
+// 새로운 add 함수를 잘못된 방법으로 호출하는 
+// try_it 함수 작성
+
+var try_it = function() {
+  try {
+    add("seven");
+  } catch(e) {
+    document.writeln(e.name + ': ' + e.message);
+  }
+}
+
+try_it();
+```
+
+try 블록 내에서 예외가 발생하면, 제어는 catch 블록으로 이동합니다.
+
+try 문은 모든 예외를 포착하는 하나의 catch 블록만을 갖습니다. 만약 예외 상황에 따라 그에 맞게 대처하고 싶은 경우에는 예외 객체의 name 속성을 확인하여 그에 맞게 처리하면 됩니다.
+
+
+## 기본 타입에 기능 추가 
+
+자바스크립트는 언어의 기본 타입에 기능을 추가하는 것을 허용합니다. 앞선 3장에서 Object.prototype에 메소드를 추가하여 모든 객체에서 이 메소드를 사용 가능하게 하는 것을 보았습니다. 이러한 작업은 함수, 배열, 문자열, 숫자, 정규 표현식, 불리언에 모두 유효합니다.
+
+예를 들어 다음과 같이 method라는 메소드를 Function.prototype에 추가하면 이후 모든 함수에서 이 메소드를 사용할 수 있습니다.
+
+```javascript
+Function.prototype.method = function (name, func) {
+  thos.prototype[name] = func;
+  return this;
+};
+```
+
+이와 같이 method라는 메소드를 Function.prototype에 추가함으로써 앞으로는 Function.prototype에 메소드를 추가할 때 prototype이라는 속성 이름을 사용할 필요가 없습니다. 이로 인해 코드를 다소 보기 안 좋게 하는 부분(.prototype)이 사라집니다. (위 코드처럼 추가하던 것을 아래의 코드처럼 .prototype 부분없이 깔금하게 사용할 수 있습니다.)
+
+자바스크립트에는 따로 구분된 정수형이 없어서 때때로 숫자형에서 정수 부분만 추출해야 하는 경우가 생깁니다. 그런데 이러한 작업을 위해 자바스크립트가 제공하는 방법은 용이하지 않습니다. 이러한 문제를 다음의 예처럼 Number.prototype에 integer라는 메소드를 추가해서 해결할 수 있습니다. 이 메소드는 숫자의 부호에 따라 Math.ceiling이나 Math.floor를 사용합니다.
+
+```javascript
+Number.method('integer', function() {
+  return Math[this < 0 ? 'ceiling' : 'floor'](this);
+});
+document.writeln((-10 / 3).integer()); // -3
+```
+
+자바스크립트에는 문자열의 양 끝에 있는 빈 칸을 지우는 메소드가 없습니다. 이러한 부실함을 다음과 같이 간단하게 보완할 수 있습니다.
+
+
+```javascript
+String.method('trim', function(){
+  return this.replace(/^\s+|\s+$/g, '');
+});
+document.writeln('"' + "  neat ".trim()+'"');
+```
+
+trim() 메소드는 정규 표현식을 사용합니다.
+
+이러한 방법으로 기본적인 타입에 기능을 추가함으로써 언어의 능력을 배가시킬 수 있습니다. 자바스크립트의 프로토타입에 의한 상속이라는 동적인 본성 덕분에 새로운 메소드를 추가하면 관련된 값들에는 바로 새로운 메소드들이 추가됩니다. 이러한 특성은 해당 값이 새로운 메소드가 추가되기 전에 생성됐더라도 관계 없이 적용됩니다.
+
+기본 타입의 프로토타입은 public구조입니다. 그러므로 라이브러리들을 섞어서 사용할 때는 주의할 필요가 있습니다. 한 가지 방어적인 방법은 존재하지 않는 메소드만 추가하는 것입니다.
+
+```javascript
+
+// 조건에 따라 메소드를 추가.
+
+Function.prototype.method = function(name, func) {
+  if(!this.prototype[name]) {
+    this.prototype[name] = func;
+  }
+};
+```
+
+## 재귀적 호출
+
+재귀 함수는 직접 또는 간접적으로 자신을 호출하는 함수입니다. 재귀적 호출은 어떤 문제가 유사한 하위 문제로 나뉘어지고 각각의 문제를 같은 해결 방법으로 처리할 수 있을 때 사용할 수 있는 강력한 프로그래밍 기법입니다. 일반적으로 재귀함수는 하위 문제를 처리하기 위해 자신을 호출합니다.
+
+하노이의 탑은 유명한 퍼즐입니다. 이 퍼즐에는 3개의 기둥과 가운데 구멍이 있는 다양한 지름의 원반이 있습니다. 먼저 시작 기둥에 원반들을 지름이 큰 것에서부터 작은 것으로 차례로 쌓습니다. 목표는 한 번에 원한 하나를 다른 기둥으로 옮기면서 최종적으로 목적 기둥에 원래의 순서대로 쌓는 것입니다. 여기서 한가지 규칙은 절대로 큰 원반이 작은 원반 위에 쌓여서는 안 된다는 것입니다. 이 퍼즐은 재귀적 호출을 위한 전형적인 문제입니다.
+
+```javascript
+var hanoi = function(disc, src, aux, dst) {
+  if( disc > 0 ) {
+    hanoi(disc - 1, src, dst, aux);
+    document.writeln('Move disc' + disc + 'from' + src + 'to' + dst);
+    hanoi(disc - 1, aux, src, dst);
+  }
+};
+
+hanoi(3, 'Src', 'Aux', 'Dst');
+```
+
+이 프로그램을 실행하면 3개의 원반에 대한 다음과 같은 해결방법을 볼 수 있습니다.
+
+```
+Move disc 1 from Src to Dst
+Move disc 2 from Src to Aux
+Move disc 1 from Dst to Aux
+Move disc 3 from Src to Dst
+Move disc 1 from Aux to Src
+Move disc 2 from Aux to Dst
+Move disc 1 from Src to Dst
+```
+
+Hanoi 함수는 필요한 경우 보조 기둥을 사용하며 원반들을 목적지 기둥으로 옮깁니다. 이 함수는 전체적인 문제 하나를 세부 문제 세 개로 분리합니다. 먼저 위쪽에 있는 원반들을 보조 기둥으로 옮겨서 바닥에 있는 원반을 드러나게 합니다. 이렇게 하면 바닥에 있는 원반을 목적지 기둥으로 옮길 수 있습니다. 마지막으로 보조 기둥에 있는 원반을 목적지 기둥으로 옮깁니다. 보조 기둥에 있는 남은 원반들의 이동은 자신을 재귀적으로 호출하는 방식으로 수행됩니다.
+
+hanoi 함수는 옮겨야 할 원반의 수와 사용할 수 있는 기둥 세 개를 넘겨 받습니다. hanoi는 자신을 재귀적으로 호출할 때 현재 작업하고 있는 원반의 위에 있는 원반을 처리합니다. 이러한 작업을 반복하면 결국 원반이 없는 상태에서 함수가 호출됩니다. 이런 경우 아무 것도 하지 않게 되는데 이렇게 함으로써 재귀적 호출이 무한대로 일어나지 않게 됩니다.
+
+재귀 함수는 웹 브라우저의 DOM(Document Object Model) 같은 트리구조를 다루는데 매우 효과적입니다. 즉 각각의 재귀적 호출이 트리 구조의 항목 하나에 대해 작동하면 효율적으로 트리 구조를 다룰 수 있습니다. 
+
+```javascript
+// 주어진 노드부터 HTML 소스 순으로 DOM 트리의
+// 모든 노드를 방문하는 walk_the_DOM 함수 정의.
+// 이 함수는 차례로 각각의 노드를 넘기면서 함수를 호출.
+// walk_the_DOM은 각각의 자식 노드들을 처리하기 위해서
+// 자신을 호출함
+
+var walk_the_DOM = function walk(node, func) {
+  func(node);
+  node = node.firstChild;
+  while (node) {
+    walk(node, func);
+    node = node.nextSibling;
+  }
+};
+
+// getElementsByAttribute 함수 정의
+// 이 함수는 어트리뷰트 이름(att)과 일치하는 값(value, 이 값은 넘기지 않아도 되는 옵션임)을 인수로 받음
+// 이 함수는 노드에서 어트리뷰트 이름을 찾는 함수를 전달하면서
+// walk_the_DOM을 호출.
+// 일치하는 노드는 results 배열에 저장됨.
+
+var getElementsByAttribute = function (att, value) {
+  var results = [];
+
+  walk_the_DOM(document.body, function(node) {
+    var actual = node.nodeType === 1 && node.getAttribute(att);
+    if (typeof actual === 'string' && actual === value || typeof value ! == 'string') {
+    results.push(node);
+  }
+});
+return results;
+};
+```
+
+몇몇 언어에서는 고리 재귀(tail recursion) 최적화를 제공합니다. 꼬리 재귀 최적화라는 것은 함수가 자신을 재귀적으로 호출하는 것을 반환하는 방법으로 진행되는 재귀적 호출(꼬리 재귀)일 경우 이를 개선하여 속도를 매우 빠르게 향상시키는 반복 실행으로 대체하는 것입니다(다음의 예 참조). 불행하게도 현재 자바스크립트는 꼬리 재귀 최적화를 제공하지 않습니다. 자신을 매우 깊은 단계까지 호출하는 함수는 반환 스택의 과다 사용으로 제대로 실행되지 않을 수 있습니다.
+
+```javascript
+// 꼬리 재귀를 하는 계승(factorial) 함수를 만듦.
+// 호출 자체의 결과를 반환하기 때문에 꼬리 재귀임.
+
+// 현재 자바스크립트는 이러한 유형에 대해 최적화를 제공하지 않음
+
+var factorial = function factorial(i, a) {
+  a = a || 1;
+  if ( i < 2) {
+    return a;
+  }
+  return factorial(i - 1, a * i);
+};
+document.writeln(factorial(4));     // 24
+```
+
+## 유효범위(Scope)
+
+프로그래밍 언어에서 유효범위는 변수와 매개변수의 접근성과 생존 기간을 제어합니다. 유효범위는 이름들이 충돌하는 문제를 덜어주고 자동으로 메모리를 관리하기 대문에 프로그래머에게는 중요한 개념입니다.
+
+```javascript
+var foo = function(){
+  var a = 3, b = 5;
+  var bar = function() {
+    var b = 7, c = 11;
+
+    // 이 시점에서 a는 3, b는 7, c는 11
+
+    a += b + c;
+
+    // 이 시점에서 a는 21, b는 7, c는 11
+  };
+
+  // 이 시점에서 a는 3, b는 5, c는 정의되지 않음.
+  bar();
+
+  // 이 시점에서 a는 21, b는 5
+}
+```
+
+
+C 언어 유형의 구문을 가진 모든 언어는 블록 유효 범위가 있습니다. 블록(중괄호로 묶인 문장들의 집합) 내에서 정의된 모든 변수는 블록의 바깥쪽에서는 접근할 수 없습니다. 블록 내에서 정의된 변수는 블록의 실행이 끝나면 해제됩니다. 이러한 구조는 좋은 구조입니다.
+
+자바스크립트의 블록 구문은 마치 블록 유효범위를 지원하는 것처럼 보이지만 불행히도 블록 유효범위가 없습니다. 이러한 혼란은 오류의 원인이 될 여지가 충분합니다.
+
+자바스크립트는 함수 유효범위가 있습니다. 즉 함수 내에서 정의된 매개변수와 변수는 함수 외부에서는 유효하지 않습니다. 반면에 이렇게 내부에서 정의된 변수는 함수 어느 곳에서도 접근할 수 있습니다. 
+
+오늘날 대부분의 언어에서는 변수를 가능한 늦게, 즉 처음 사용하기 바로 전에 선언해서 사용할 것을 권하고 있습니다. 하지만 자바스크립트에서는 블록 유효범위를 지원하지 않기 때문에 이러한 권고가 적용되지 않습니다. 대신에 자바스크립트에서는 함수에서 사용하는 모든 변수를 함수 첫 부분에서 선언하는 것이 최선의 방법입니다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
