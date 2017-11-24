@@ -475,8 +475,227 @@ var fade = function (node) {
 fade(document.body);
 ```
 
+`document.body(HTML<body> 태그에 의해서 만들어지는 노드)`를 넘기면서 fade를 호출합니다. fade는 level의 값을 1로 설정합니다. 그리고 step이라는 함수를 정의하고, setTimeout을 호출하여 이 함수를 100 밀리 초 후에 실행하게 합니다. 여기까지 수행을 한 후 fade는 종료합니다.
+
+약 10분의 1초 뒤에 step 함수가 호출됩니다. 이 함수는 fade의 level 값을 16진수로 변환한 후 이를 이용하여 fade의 매개변수인 node의 배경색을 변경합니다. 그리고 나서 fade의 level 값을 살펴본 후 아직 배경색이 흰색이 되지 않았으면 level의 값을 증가시킨 후, setTimeout을 사용하여 같은 작업을 반복하게 합니다.
+
+이제 다시 step 함수가 호출되면 이번에는 fade 내의 변수 level의 값이 2입니다. fade 함수는 이미 반환됐지만 함수 안의 변수는 이를 필요로 하는 내부 함수가 하나 이상 존재하는 경우 계속 유지됩니다.
+
+내부 함수가 외부 함수에 있는 변수의 복사본이 아니라 실제 변수에 접근한다는 것을 이해해야 합니다. 그렇지 않으면 다음과 같은 문제가 발생할 수 있습니다.
+
+```javascript
+// 나쁜 예제
+
+// 잘못된 방법으로 노드 배열에 이벤트 핸들러 함수를 할당하는 함수 정의
+// 노드를 클릭하면 해당 노드가 몇 번째 노드인지를 경고창으로 알려주는 것이
+// 함수의 목적
+// 하지만 항상 전체 노드의 수만을 보여줌
+var add_the_handlers = function (nodes) {
+  var i;
+  for (i=0; i < nodes.length; i += 1) {
+    nodes[i].onclick = function(e) {
+      alert(i);
+    };
+  }
+};
+// 나쁜 예제 끝.
+```
+
+add_the_handlers 함수는 각각이 핸들러에 유일한 번호(i)를 전달하도록 고안됐습니다. 하지만 이러한 의도대로 동작하지 않는데 그 이유는 핸들러 함수가 받는 i가 함수가 만들어지는 시점의 i가 아니라 그냥 변수 i에 연결되기 때문입니다.
+
+```javascript
+
+// 더 나은 예제
+
+// 올바른 방법으로 노드 배열에 이벤트 핸들러 함수를 할당하는 함수 정의.
+// 노드를 클릭하면 해당 노드가 몇 번째 노드인지를 경고창으로 알려줌.
+
+var add_the_handlers = function(nodes) {
+  var i;
+  for (i = 0; i < nodes.length; i += 1) {
+    nodes[i].onclick = function(i) {
+      return function (e) {
+        alert(i);
+      };
+    } (i);
+  }
+};
+```
+
+이제 onclick에 함수를 할당하는 대신에 새로 함수를 정의하고 여기에 i를 넘기면서 곧바로 실행시켰습니다. 실행된 함수는 add_the_handlers에 정의된 i가 아니라 넘겨받은 i의 값을 이벤트 핸들러 함수에 연결하여 반환합니다. 이 반환되는 이벤트 핸들러 함수는 onclick에 할당합니다.
 
 
+
+## 콜백
+
+함수는 비연속적인 이벤트를 다루는 것을 좀더 쉽게 할 수 있는 방법을 제공합니다. 예를 들어 사용자와 상호작용으로 시작해서 서버로 요청을 하고 마지막으로 요청에 대한 응답을 보여주는 일련의 작업 흐름이 있다고 가정해 보겠습니다. 이러한 작업을 처리하는 가장 고지식한 방법은 다음과 같은 것입니다.
+
+```javascript
+
+request = prepare_the_request();
+response = sen_request_synchronously(request);
+display(response);
+```
+
+이러한 방법으로 작업을 해결할 때의 문제는 동기화된 요청을 하기 때문에 서버로부터 응답이 올 때까지 클라이언트는 꼼짝없이 멈춰서 기다려야 한다는 것입니다. 만약 네트워크나 서버가 느리다면 이 애플리케이션은 응답성에 있어서 이해할 수 없을 만큼 최악일 것입니다.
+
+이런 작업을 처리하는 좋은 방법은 서버로 요청을 비동기식으로 하고 서버의 응답이 왔을 때 호출되는 콜백 함수를 제고앟는 것입니다. 비동기식 함수는 서버의 응답을 기다리지 않고 그 즉시 반환되기 때문에 클라이언트는 멈춤 상태로 빠지지 않습니다.
+
+```javascript
+request = prepare_the_request();
+send_request_asynchronously(request, function(response) {
+  display(response);
+});
+```
+
+send_request_asynchronously 함수에 함수를 매개변수로 전달하여 서버로부터 응답이 왔을 때 호출되게 합니다.
+
+## 모듈
+
+함수와 클로저를 사용해서 모듈을 만들 수 있습니다. 모듈은 내부의 상태나 구현 내용은 숨기고 인터페이스만 제공하는 함수가 객체입니다. 모듈을 만들기 위해서 함수를 사용하면 전역변수 사용을 거의 대부분 제거할 수 있기 때문에 결국 자바스크립트의 최대 약점 주 ㅇ하나를 보완할 수 있습니다.
+
+예를 들어 String 객체에 deentityify 메소드를 추가한다고 가정해 보겠습니다. 이 메소드는 문자열에서 HTML 엔티티들을 찾고 이들을 그에 상응하는 문자로 대체하는 기능을 합니다. deentityify는 엔티티의 이름과 상응하는 문자들이 담긴 객체를 사용해야 합니다. 그런데 이 객체를 어디에 간직해야 할까요? 간단히 생각해서 이 객체를 전역변수로 지정할 수 있습니다. 하지만 전역변수는 사용해서는 안 되는 나쁜 것입니다. 또 다른 방법으로 이 객체를 함수 자체 내에 정의할 수도 있습니다. 하지만 이 역시도 함수가 호출될 때마다 매번 객체 리터럴을 객체화(evaluate)하는 실행시간 비용(runtime cost) 부담이 있습니다. 이상적인 해결 방법은 이 객체를 클로저에 두고 이 객체에 HTML 엔티티를 추가할 수 있는 메소드를 따로 두는 것입니다.
+
+```javascript
+String.method('deentityify', function(){
+  // 엔티티 테이블. 엔티티 이름을 문자에 대응시킴
+  var entity = {
+    quot: '"',
+    lt: '<',
+    gt: '>'
+  };
+  // deentityify 메소드 반환.
+  return function() {
+    // 여기가 deentityify 메소드
+    // 문자열의 replace 메소드를 호출하여 &로 시작하고 ;로 끝나는
+    // 부분을 찾고 &와 ; 사이의 문자열이 엔티티 테이블에 잇으면
+    // 해당 문자로 엔티티를 대체. 정규표현식 사용
+    return this.replace(/&([^&;]+);/g,
+      function (a, b) {
+        var r = entity[b];
+        return typeof r === 'string' ? r : a;
+      }
+    );
+  };
+}());
+```
+
+코드의 마지막 줄을 잘 보기 바랍니다 () 연산자를 사용하여 방금 막 정의한 함수를 바로 호출하는 것을 볼 수 있습니다. 이 호출로 deentityify 메소드가 되는 함수를 생성해서 반환합니다.
+
+```javascript
+
+document.wiriteln(
+  '&lt;&quot&gt;'.deentityify());     // <">
+```
+
+모듈 패턴은 바인딩과 private을 위해 함수의 유효범위와 클로저를 이용합니다. 이 예제에서는 deentityify 메소드만이 엔티티들을 담고 있는 데이터 구조인 entity 객체에 접근할 수 있습니다. 
+
+모듈의 일반적인 패턴은 private 변수와 함수를 정의하는 함수입니다. 클로저를 통해 private 변수와 함수에 접근할 수 있는 권한이 있는 함수를 생성하고 이 함수를 반환하거나 접근 가능한 장소에 이를 저장하는 것입니다. 모듈 패턴을 사용하면 전역변수 사용을 없앨 수 있습니다. 이 패턴은 정보은닉과 그 외 다른 좋은 설꼐 방식을 따를 수 있게 하고, 애플리케이션이나 다른 싱글톤(singleton) 패턴들을 효과적으로 캡슐화할 수 있게 합니다.
+
+모듈 패턴은 또한 안전한 객체를 생성하는데도 사용할 수 있습니다. 이제 시리얼 번호를 생성하는 객체를 만든다고 가정해 보겠습니다.
+
+```javascript
+var serial_maker = function () {
+  // 유일한 문자열을 생성하는 객체 생성.
+  // 유일한 문자열은 접두어와 연속된 숫자 두 부분으로 구성됨
+  // 객체에는 접두어와 연속된 숫자를 설정하는 메소드와
+  // 유일한 문자열을 생성하는 gensym 메소드가 있음.
+
+  var prefix = '';
+  var seq = 0;
+  return {
+    set_prefix: function(p) {
+      prefix = String(p);
+    },
+    set_seq: function(s) {
+      seq = s;
+    },
+    gensym: function(){
+      var result = prefix + seq;
+      seq += 1;
+      return result;
+    }
+  };
+};
+
+var seqer = serial_maker();
+seqer.set_prefix('Q');
+seqer.set_seq(1000);
+var unique = seqer.gensym(); // unique는 "Q1000"
+```
+
+메소드가 this나 앞서 살펴본 that(03절의 함수 호출 패턴 예제 참조)을 사용하지 않기 때문에 seqer 내부의 변수를 접근할 수 있는 방법은 없습니다. 즉 해당 변수를 다루도록 정의된 메소드를 제외하고는 prefix나 seq의 값을 얻거나 변경할 수 있는 방법은 없습니다. seqer객체는 변형될 수 있기 때문에 가지고 있는 메소드들은 다른 메소드로 대체될 수 있지만 그렇다고 해서 대체된 메소드들이 숨겨져 있는 prefix와 seq를 접근할 수는 없습니다. seqer은 단순히 함수들의 집합처럼 보이지만, 이 함수들만이 숨겨진 변수들을 사용하거나 수정할 수 있는 권한이 있습니다.
+
+seqer.gnesym을 써드 파티 함수에 넘기면 유일한 문자열을 생성할 수 있지만 써드 파티 함수가 prefix나 seq를 변경할 수 없습니다.
+
+## 연속 호출(Cascade)
+
+일부 메소드는 반환값이 없습니다. 예를 들어 객체의 상태를 변경하거나 설정하는 메소드들은 일반적으로 반환값이 없습니다. 만약 이러한 메소드들이 undefined 대신에 this를 반환한다면 연속 호출이 가능합니다. 연속 호출을 사용하면 같은 객체에 대해 문장 하나로 연속되는 많은 메소드를 호출할 수 있습니다. 연속 호출을 가능하게 하는 Ajax 라이브러리를 사용하면 다음과 같은 스타일의 프로그래밍이 가능합니다.
+
+```javascript
+getElement('myBoxDiv').
+  move(350, 150).
+  width(100).
+  height(100).
+  color('red').
+  border('10px outset').
+  padding('4px').
+  appendText("Please stand by").
+  on('mousedown', function(m) {
+    this.startDrag(m, this.getNinth(m));
+  }).
+  on('mousemove', 'drag').
+  on('mouseup', 'stopDrag').
+  later(2000, function(){
+    this.
+      color('yellow').
+      setHTML("What hath God wraught?").
+      slide(400, 40, 200, 200);
+  }).
+  tip('This box is resizeable');
+```
+
+이 예제에서 getElement 함수는 id가 myBoxDiv인 DOM 엘리먼트에 여러 기능을 추가한 객체를 만환합니다. 이 객체에는 엘리먼트를 이동할 수 있는 메소드, 크기나 스타일을 변경하거나 특정 행동을 추가할 수 있는 메소드들이 포함됩니다. 각각의 메소드는 객체를 반환하기 떄문에 각 메소드 호출 결과를 다음 호출에 사용할 수 있습니다.
+
+연속 호출은 매우 표현적인 인터페이스를 제공할 수 있게 합니다. 연속 호출은 한 번에 많은 작업을 할 수 있는 인터페이스를 만드는데 도움이 됩니다.
+
+## 커링(Curry)
+
+함수는 값(Value)이며, 이 함수값을 흥미로운 방법으로 다룰 수 있습니다. 커링은 함수와 인수를 결합하여 새로운 함수를 만들 수 있게 합니다.
+
+```javascript
+var add1 = add.curry(1);
+document.writeln(add1(6));    // 7
+```
+
+add1은 add의 curry 메소드에 1을 넘겨서 생성한 함수입니다. add1 함수는 자신의 인수에 1을 더합니다. 자바스크립트는 curry 메소드가 없지만 다음과 같이 Function.prototype에 이를 추가할 수 있습니다.
+
+```javascript
+Function.method('curry', function(){
+  var args = arguments, that = this;
+  return function(){
+    return that.apply(null, args.concat(arguments));
+  };
+});     // 뭔가 잘못된 점이...
+```
+
+curry 메소드는 커링할 원래 함수와 인수를 유지하는 클로저를 만드는 방식으로 동작합니다. 이 Curry 메소드는 새로운 함수를 만들어 반환하는데 이렇게 반환되는 함수는 curry 메소드를 호출할 때 받은 인수와 자신을 호출할 때 받게 되는 인수를 결합하여 curry를 실행한 원래 함수를 호출합니다. curry 메소드는 arguments 배열 두 개를 연결하기 위해 배열의 concat 메소드를 사용합니다. 
+
+불행하게도 앞서 살펴본 것처럼 arguments 배열은 배열이 아닙니다. 그래서 arguments는 concat이라는 메소드가 없습니다. 이 문제를 해결하기 위해 arguments 배열 두 개에 배열의 slice 메소드를 적용할 것입니다. 이렇게 하면 concat 메소드를 포함하는 진정한 배열이 반환됩니다.
+
+```javascript
+Function.method('curry', function(){
+  var slice = Array.prototype.slice,
+      args = slice.aaply(arguments),
+      that = this;
+      return function(){
+        return that.apply(null, args.concat(slice.apply(arguments)));
+      };
+    });
+```
+
+
+## 메모이제이션(memoization)
 
 
 
