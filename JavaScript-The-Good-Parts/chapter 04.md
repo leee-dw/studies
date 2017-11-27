@@ -746,10 +746,35 @@ var fibonacci = function () {
 
 이러한 메모이제이션 작업은 메모이제이션 함수를 만들 수 있게 도와주는 함수를 만들어서 일반화할 수 있습니다. 다음의 예제 코드에 나오는 mmomoizer 함수는 결과를 저장할 배열(매개변수 memo)과 메모이제이션을 할 함수(매개변수 fundamental)를 인수로 받습니다. 그런 다음 memo에 저장되는 데이터를 관리하고 필요한 경우 fundamental 함수를 호출하는 shell 함수를 반환합니다. shell 함수와 함수가 받게 되는 인수는 fundamental 함수에 전달합니다.
 
+```javascript
+var memoizer = function(memo, fundamental) {
+  var shell = function (n) {
+    var result = memo[n];
+    if (typeof result !== 'number') {
+      result = fundamental(shell, n);
+      memo[n] = result;
+    }
+    return result;
+  };
+  return shell;
+};
+```
 
+이제 다음과 같이 매개변수 memo에 해당하는 배열과 매개변수 fundamental에 해당하는 메모이제이션할 함수를 memoizer에 전달하여 fibonacci 함수를 정의할 수 있습니다.
 
+```javascript
+var fibonacci = memoizer([0, 1], function (shell, n) {
+  return shell(n - 1) + shell(n -2);
+});
+```
 
+이런 식으로 다른 함수를 만들어내는 함수를 고안하면 작업 양을 현저하게 줄일 수 있습니다. 예를 들어 다음과 같이 기본적인 계승(factorial) 공식만 제공하면 메모이제이션을 사용하면 factorial 이라는 계승 함수를 손쉽게 만들 수 있습니다.
 
+```javascript
+var factorial = memoizer([1, 1], function(shell, n){
+  return n * shell(n-1);
+});
+```
 
 
 
