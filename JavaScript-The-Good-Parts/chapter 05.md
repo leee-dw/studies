@@ -245,3 +245,170 @@ spec 객체는 constructor가 인스턴스를 만드는데 필요한 모든 정�
 
 my 객체는 상속 연결상에서 생성자와 공유하게 되는 비밀들을 담는 컨테이너입니다. my 객체를 사용하는 것은 선택사항입니다. my 객체가 전달되지 않으면 내부에서 이 객체가 만들어집니다.
 
+다음은 private 변수와 메소드를 정의하는 것입니다. 방법은 간단합니다. 단지 constructor 내부에서 변수와 함수를 정의하면 이것들이 private 변수와 함수가 됩니다. 내부 함수는 spec, my, that과 함께 정의된 모든 (private) 변수를 다 접근할 수 있습니다.
+
+다음은 공유할 private 요소들을 my 객체에 추가하는 것입니다. 방법은 다음과 같이 할당하는 것입니다.
+
+```javascript
+my.member = value;
+```
+
+이제 새로운 객체를 만들고 that에 할당합니다. 새로운 객체는 다양한 방법으로 만들 수 있습니다. 객체 리터럴로 만들 수도 있고, new 연산자를 사용하는 의사 클래스 생성자로 만들 수도 있으며, prototype 객체에 Object.create 메소드를 사용할 수도 있습니다. 또한 별도의 함수형 생성자에 spec, my 객체를 넘겨 만들 수도 있습니다(물론 spec과 my 객체는 constructor에 넘어온 것 그대로 넘길 수 있습니다). my 객체는 별도의 생성자와 my에 넣은 것들을 공유하게 합니다. 여기에서 사용되는 별도의 생성자도 my 객체에 자신만의 비밀을 담아 constructor에 전달할 수 있습니다.
+
+다음은 객체의 인터페이스를 담당하게 될 메소드들을 that에 추가하는 것입니다(이 메소드들은 private 변수들을 접근할 수 있습니다). 새로운 함수를 that의 구성요소로 추가하거나, 더 안전하게 다음과 같이 일단 새로운 함수를 private 메소드로 정의한 다음에 이 함수를 that에 할당할 수 있습니다.
+
+```javascript
+var methodical = function(){
+  ...
+};
+that.methodical = methodical;
+```
+
+이렇게 두 단계를 거처 methodical을 정의하면 좋은 점은 methodical을 호출하기 원하는 다른 메소드가 `that.methodical()`로 호출하는 대신 바로 `methodical()`로 호출할 수 있다는 것입니다. 또한 `that.methodical`이 대체되여 변경이 된다 하더라도 private인 methodical은 이러한 변경에 영향을 받지 않기 때문에, methodical을 호출하는 메소드는 계속해서 같은 작업을 수행할 수 있게 됩니다.
+
+마지막으로 that을 반환합니다.
+
+이제 앞서 살펴본 mammal 예제에 이 패턴을 적용해 보겠습니다. 여기서는 my가 필요 없기 때문에 my는 없애고 spec 객체만 사용할 것입니다.
+
+다음과 같이 함수를 사용한 패턴을 적용하면 name과 saying은 완전한 private 속성이 됩니다. 이 속성들은 get_name과 says 메소드만이 접근할 수 있습니다.
+
+```javascript
+var mammal = function(spec) {
+  var that = {};
+
+  that.get_name = function(){
+    return spec.name;
+  };
+  that.says = function(){
+    return spec.saying || '';
+  };
+  return that;
+};
+
+var myMammal = mammal({name: 'Herb'});
+```
+
+의사 클래스 패턴에서는 Cat 생성자 함수가 Mammal 생성자가 하는 작업과 같은 작업을 중복해서 해야만 했습니다. 하지만 함수형 패턴에서는 Cat 생성자가 Mammal 생성자를 호출하고 Mammal 생성자가 객체 생성을 위해 필요한 대부분의 작업을 하기 때문에 이러한 작업이 필요 없습니다. Cat은 다만 자신에게 추가되는 부분만 신경 쓰면 됩니다. 
+
+```javascript
+var cat = function(spec) {
+  spec.saying = spec.saying || 'meow';
+  var that = mammal(spec);
+  that.purr = function(n) {
+    var i, s = '';
+    for (i=0; i < n; i += 1) {
+      if (s) {
+        s += '-';
+      }
+      s += 'r';
+    }
+    return s;
+  };
+  that.get_name = function(){
+    return that.says() + ' ' + spec.name + ' ' + that.says();
+    return that;
+  };
+  var myCat = cat({name: 'Henrietta'});
+}
+```
+
+함수형 패턴은 또한 super 메소드를 다룰 수 있는 방법을 제공합니다. 이제 메소드 이름을 받아서 해당 메소드를 실행하는 함수를 반환하는 superior라는 메소드를 만들어 보겠습니다. superior 메소드가 반환하는 함수는 속성이 변경되더라도 원래 함수를 호출합니다.
+
+```javascript
+Object.method('superior', function(name){
+  var that = this,
+  method = that[name];
+  return function(){
+    return method.apply(that, arguments);
+  };
+});
+```
+
+이제 cat과 같으면서 추가적으로 super 메소드를 호출하는 메소드인 get_name을 가진 coolcat을 통해 시험해 보겠습니다. 이를 위해서는 준비하 필요한데, super_get_name이라는 변수를 선언하고 여기에 superior 메소드를 호출한 결과를 할당하는 것입니다.
+
+```javascript
+var coolcat = function(spec) {
+  var that = cat(spec),
+  super_get_name = that.superior('get_name');
+  that.get_name = function(n) {
+    return 'like ' + super_get_name() + ' baby';
+  };
+  return that;
+};
+
+var myCoolCat = coolcat({name: 'Bix'});
+var name = myCoolCat.get_name();
+// 'like meow Bix meow baby'
+```
+
+함수형 패턴은 유연성이 매우 좋습니다. 이 패턴은 의사 클래스 패턴보다 작업량이 적고 캡슐화와 정보은닉 그리고 super 메소드에 접근할 수 있는 방법까지 제공합니다.
+
+객체의 상태 모두가 private 이면 객체는 방탄이 됩니다. 객체의 속성은 대체되거나 삭제될 수 있지만 객체의 무결성은 전혀 영향을 받지 않습니다. 함수형 스타일로 객체를 만들고 객체의 모든 메소드가 this나 (this를 할당받는) that을 사용하지 않는다면 이 객체는 영구적으로 변치 않습니다. 이러한 객체는 단순히 다양한 기능을 하는 함수들을 모아 놓은 집합 역할을 합니다.
+
+이러한 객체는 절대 타협하지 않습니다. 이러한 객체는 주어진 메소드 외에는 내부 상태를 접근할 수 없기 때문에 악의적인 공격자들로부터 안전합니다.
+
+## 클래스 구성을 위한 부속품
+
+제품을 만들 때 부속품들을 가져다 조립을 하듯이 객체를 구성할 때도 같은 방법으로 할 수 있습니다. 간단하게 이벤트 처리 기능을 객체에 추가하는 함수의 예를 통해 이를 살펴보겠습니다. 이 함수는 on, fire 메소드와 이벤트 목록을 관리하는 private 속성의 registry를 객체에 추가합니다.
+
+```javascript
+var eventuality = function(that) {
+  var registry = {};
+
+  that.fire = function(event) {
+  // 객체에서 이벤트에 상응하는 처리기를 실행시킴
+  // 매개변수 event는 이벤트 이름을 퐇마하는 문자열이거나
+  // 이벤트 이름을 갖고 있는 type 속성을 가진 객체일 수 있음.
+  // on 메소드에 의해 등록되는 이벤트 이름과 같은 처리 함수가 호출됨.
+
+    var array,
+        func,
+        handler,
+        i,
+        type = typeof event === 'string'  ?
+                      event: event.type;
+  // 해당 이벤트에 상응하는 처리 함수 목록 배열이 있으면 루프를 돌면서 이 배열에 등록돼 있는 모든 처리 함수를 실행시킴
+    if (registry.hasOwnProperty(type)){
+      array = registry[type];
+      for(i = 0; i < array.length; i += 1) {
+        handler = array[i];
+  // 처리 함수 배열에 속하는 항목 하나는 처리 함수인 method와 매개변수인 parameters라는 배열로 구성됨.
+  // (parameters는 옵션). method가 함수 자체가 아니라 이름이면 this에서 해당 함수를 찾음.
+        func = handler.method;
+        if(typeof func === 'string') {
+          func = this[func];
+        }
+    // 처리 함수 호출. parameters가 있으면 이를 넘김
+    // 만약 없으면 event 객체를 넘김
+        func.apply(this, handler.parameters || [event]);
+      }
+    }
+    return this;
+  };
+  that.on = function(type, method, parameters) {
+  // 이벤트 등록. handler 항목을 만들고 해당 이벤트 타입의 배열에 추가.
+  // 만약 기존에 배열이 없다면 해당 이벤트 타입에 대해 새로운 배열 생성.
+    var handler = {
+      method: method,
+      parameters: parameters
+    };
+    if (registry.hasOwnProperty(type)) {
+      registry[type].push(handler);
+    } else {
+      registry[type] = [handler];
+    }
+    return this;
+  };
+  return that;
+};
+```
+
+이제 원하는 객체에 특정 이벤트 처리를 위해 eventuality를 호출할 수 있습니다. 또한 앞서 살펴본 constructor 함수에서 that을 반환하기 전에 다음과 같이 eventuality를 호출할 수도 있습니다.
+
+```
+eventuality(that)
+```
+
+이러한 방법으로 constructor는 객체에 필요한 기능을 마치 부품을 가져다 조립하듯 추가할 수 있습니다(즉, 이 예처럼 객체에 이벤트 관련 기능이 필요한 경우 eventuality라는 수복을 사용하여 해당 기능을 추가할 수 있습니다). 자바스크립트의 엄격하지 않은 데이터 타입 체크는 이런 부분에서 큰 이점을 줍니다. 왜냐하면 클래스의 상속 계통에서 일일이 데이터 타입 체계를 신경쓸 필요가 없기 때문입니다. 대신에 각각이 가진 내용과 기능들에만 초점을 맞추면 됩니다.
+
+만약 eventuality에서 객체의 private 부분들을 접근하기 원한다면 my를 넘기면 됩니다.
