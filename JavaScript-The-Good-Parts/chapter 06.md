@@ -150,3 +150,129 @@ var is_array = function (value) {
 먼저 value가 참인지를 확인합니다. 이렇게 함으로써 null이나 여타 다른 거짓값을 배제할 수 있습니다. 두 번째로 typeof value가 'object'인지 확인합니다. value가 객체나 배열 또는 (조금 이상하지만) null인 경우에 참이 됩니다. 세 번째로 value에 숫자값을 가진 length 속성이 있는지를 확인합니다. 이 부분은 배열인 경우에 항상 참이며 객체인 경우에는 보통 거짓입니다. 네 번째로 value가 splice 메소드를 가졌는지를 확인합니다. 이 부분은 배열인 경우에만 참이 됩니다. 마지막으로 length 속성이 열거 가능한지를 확인합니다. 즉 for in 문으로 열거 가능한지를 확인하는 것입니다. 배열인 경우 length는 열거할 수 없습니다. 이러한 방법이 필자가 찾아낸 가장 신뢰할 만한 방법입니다. 이 방법의 문제점이라면 절차가 좀 복잡하다는 것입니다.
 
 이러한 확인 방법을 사용하면 넘어온 값이 단일 값인지 배열인지를 구분하여 그에 맞는 작업을 하는 함수를 만들 수 있습니다.
+
+
+## 배열의 메소드
+
+자바스크립트는 배열에 동작하는 메소드들을 제공합니다. 이 메소드들은 Array, prototype에 저장돼 있는 함수들입니다. 3장에서 Object.prototype에 원하는 것들을 추가하는 것을 살펴본 것처럼, Array.prototype에도 원하는 메소드를 추가할 수 있습니다. 예를 들어 배열을 대상으로 연산을 할 수 있는 메소드를 추가하고 싶다면 가정해 보겠습니다.
+
+```javascript
+Array.method('reduce', function(f, value) {
+  var i;
+  for (i = 0; i < this.length; i += 1) {
+    value = f(this[i], value);
+  }
+  return value;
+});
+```
+
+Array.prototype에 함수를 추가하면 모든 배열이 추가한 메소드를 상속받게 됩니다. 이제 함수와 시작값을 취하는 reduce라는 메소드를 정의했습니다. 배열의 각 요소들은 reduce에 넘겨진 함수에 value와 같이 넘겨지고 계산된 값이 다시 value에 저장됩니다. 모든 작업을 마쳤을 때 value를 반환합니다. 만약 두 수를 더하는 함수를 넘겼다면 reduce 호출의 결과는 배열 요소들 전체의 합이 되고, 두 수를 곱하는 함수를 넘겼다면 전체의 곱이 됩니다.
+
+```javascript
+// 숫자들이 요소인 배열 생성.
+var data = [4, 8, 15, 16, 23, 42];
+
+// 간단한 함수 두 개를 정의
+// 하나는 두 수를 더하는 함수이고 다른 하나는 두 수를 곱하는 함수.
+
+var add = function(a, b) {
+  return a + b;
+};
+
+var mult = function(a, b) {
+  return a * b;
+};
+
+// add 함수를 넘기면서 data의 reduce 메소드 호출.
+var sum = data.reduce(add, 0);    // 합은 108
+
+// multiply 함수를 넘기면서 reduce 메소드를 다시 호출.
+
+var product = data.reduce(mult, 1);
+// 곱은 7418880
+```
+
+배열은 실제 객체이기 때문에 다음과 같이 개별 배열에 직접적으로 메소드를 추가할 수 있습니다.
+
+```javascript
+// data 배열에 total 메소드 추가
+data.total = function(){
+  return this.reduce(add, 0);
+};
+total = data.total(); // total은 108
+```
+
+문자열 'total'은 정수가 아니기 때문에, total 속성을 추가한다고 해도 length의 값은 변하지 않습니다. 배열은 속성들의 이름이 정수일 때 가장 유용하지만 배열은 객체이고 객체는 어떠한 문자열도 속성 이름으로 허용합니다.
+
+Object.create 메소드는 배열이 아니라 객체를 반환하기 때문에 배열에 사용하는 것은 별로 유용하지 않습니다. Object.create로 배열을 받아 만들어진 객체는 배열의 값과 메소드를 상속받기는 하지만 배열의 특수 속성인 length는 갖지 못합니다.
+
+
+
+## 배열의 크기와 차원
+
+자바스크립트의 배열은 보통 초기화되지 않습니다. 만약 새로운 배열을 []로 만들게 되면 배열은 비어있게 됩니다. 그리고 존재하지 않는 요소를 접근하게 되면 undefined 값을 얻게 됩니다. 이러한 사실을 알고 있거나 또는 배열 요소를 참조하기 전에 모든 배열 요소의 값을 설정한다면 배열을 사용하는데 아무런 문제가 없습니다. 하지만 만약에 배열의 모든 요소가 0과 같이 알 수 잇는 값으로 시작한다고 가정하는 알고리즘을 구현하는 경우라면 이에 문제가 없게 배열을 준비시켜야 합니다. 이를 위해 자바스크립트는 Array.dim 같은 메소드를 제공했어야 합니다. 하지만 현실은 그렇지 못하며 다음과 같은 메소드를 정의함으로써 이러한 결점을 고칠 수 있습니다.
+
+```javascript
+Array.dim = function(dimension, initial) {
+  var a = [], i;
+  for (i = 0; i < dimension; i += 1) {
+    a[i] = initial;
+  }
+  return a;
+};
+
+// 10가의 0을 갖는 배열 생성.
+var myArray = Array.dim(10, 0);
+```
+
+자바스크립트에는 다차원 배열이 없지만 대부분 C 유형의 언어처럼 다음과 같이 배열의 배열을 사용할 수 있습니다.
+```javascript
+var matrix = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6 7, 8]
+];
+matrix[2][1]    // 7
+```
+
+2차원 배열이나 배열들의 배열을 만들기 위해서는 다음과 같이 직접 배열을 만들어야 합니다.
+
+```javascript
+for(i = 0; i < n; i += 1 ) {
+  my_array[i] = [];
+}
+
+// 주의: Array.dim(n,[])는 여기에서 동작하지 않음.
+// 각각의 요소들이 같은 배열의 참조를 갖게 됨.
+```
+
+이 코드는 각 배열들을 초기화하지 못합니다. my_array의 요소들인 각 배열을 초기화하려면 일일이 명시적으로 설정해야 합니다. 이런 경우를 위해 자바스크립트가 행렬을 위한 메소드를 지원하면 좋겠지만 역시 그렇지 못합니다. 다시 한번 이러한 결점을 다음과 같은 코드로 보완할 수 있습니다.
+
+```javascript
+Array.matrix = function(m, n, initial) {
+  var a, i, j, mat = [];
+  for (i = 0; i < m; i += 1) {
+    a = [];
+    for (j = 0; j < n; j += 1) {
+      a[j] = initial;
+    }
+    mat[i] = a;
+  }
+  return mat;
+};
+// 0으로 채워진 4 * 4 행렬 생성.
+
+var myMatrix = Array.matrix(4, 4, 0);
+document.writeln(myMatrix[3][3]);   // 0
+// 행과 열이 같은 수의 행렬을 만드는 메소드
+Array.identity = function(n) {
+  var i, mat = Array.matrix(n, n, 0);
+  for(i = 0; i < n; i += 1) {
+    mat[i][i] = 1;
+  }
+  return mat;
+};
+
+myMatrix = Array.identity(4);
+document.writeln(myMatrix[3][3]);   // 1
+```
