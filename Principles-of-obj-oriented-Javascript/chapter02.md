@@ -14,7 +14,7 @@ function add(num1, num2) {
 }
 ```
 
-두 번째는 function 키워드 다음에 이름을 적지 않아도 되는 함수 표현식(function expression)이다. 이렇게 작성한 함수는 함수 객체 자체에 이름이 없어 익명 함수(anonymous function)라고도 한다. 함수 표식은 일반적으로 다음고 ㅏ같이 변수나 속성에 참조된다.
+두 번째는 function 키워드 다음에 이름을 적지 않아도 되는 함수 표현식(function expression)이다. 이렇게 작성한 함수는 함수 객체 자체에 이름이 없어 익명 함수(anonymous function)라고도 한다. 함수 표식은 일반적으로 다음과 같이 변수나 속성에 참조된다.
 
 ```javascript
 var add = function(num1, num2) {
