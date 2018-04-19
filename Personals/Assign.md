@@ -100,7 +100,7 @@ animate();
 
 
 1. Call Stack에 animate() 함수가 쌓이고, animate()함수 위에 setTimeout함수가 쌓입니다.
-2. setTimeout()을 실행하면 setTimeout은 사라지고, setTimeout 안에 있는 animate는 Web API로 이동합니다. 
+2. setTimeout()을 실행하면 setTimeout은 사라지고, setTimeout 안에 있는 animate는 Web API로 이동합니다. 그리고 animate() 함수도 종료됩니다.
 3. 1000ms 후, Web API에 있는 animate 함수는 Callback Queue로 이동합니다.
 4. Event Loop가 Call Stack이 비어있는 것을 확인하면 Callback Queue에 있는 animate함수를 Call Stack으로 옮깁니다.
 5. 1~4번 과정을 반복하게 됩니다. 
@@ -110,3 +110,4 @@ setTimeout 함수를 사용하면 Call Stack에 쌓이지 않고, Web API와 Cal
 
 위 과정을 그림으로 표현하면 다음과 같습니다.
 
+![Recursive](https://raw.githubusercontent.com/likedemian/Private-Studies/master/Personals/recursive.png)
