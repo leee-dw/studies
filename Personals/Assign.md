@@ -106,5 +106,7 @@ animate();
 5. 1~4번 과정을 반복하게 됩니다. 
 
 
-
 setTimeout 함수를 사용하면 Call Stack에 쌓이지 않고, Web API와 Callback Queue, Call Stack을 반복하게 됩니다.
+
+위 과정을 그림으로 표현하면 다음과 같습니다.
+
