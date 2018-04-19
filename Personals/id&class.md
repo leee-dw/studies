@@ -1,15 +1,21 @@
 ## id 속성
 
 ```html
-  <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit necessitatibus nam provident, enim debitis harum dignissimos
-    repellat sequi recusandae a omnis, cum quae similique. Delectus quod reprehenderit ut qui commodi.</p>
-  <p id="pullquote">Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum eaque, harum, repudiandae error eos, rerum illum obcaecati
-    distinctio nisi eveniet ab tempora sequi delectus? Labore ipsa debitis quo ex tempore!</p>
-  <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Voluptatibus recusandae deleniti nesciunt necessitatibus natus
-    facilis fugiat vero iste quas fuga, consectetur delectus suscipit libero blanditiis! Sapiente consequatur maiores incidunt
-    quibusdam!</p>
+<style>
+  #pullquote {
+    color: #7fadee;
+    font-weight: 700;
+  }
+</style>
 
+<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit necessitatibus nam provident, enim debitis harum dignissimos repellat sequi recusandae a omnis, cum quae similique. Delectus quod reprehenderit ut qui commodi.</p>
+
+<p id="pullquote">Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum eaque, harum, repudiandae error eos, rerum illum obcaecati distinctio nisi eveniet ab tempora sequi delectus? Labore ipsa debitis quo ex tempore!</p>
+
+<p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Voluptatibus recusandae deleniti nesciunt necessitatibus natus facilis fugiat vero iste quas fuga, consectetur delectus suscipit libero blanditiis! Sapiente consequatur maiores incidunt quibusdam!</p>
 ```
+
+![id](https://raw.githubusercontent.com/likedemian/Private-Studies/master/Personals/id.png)
 
 - 페이지에 있는 다른 요소들과 해당 요소를 고유하게 식별하는 데 id속성을 사용한다.
 - id 속성의 값은 **알파벳 또는 밑줄로만 시작해야 하며 숫자나 다른 문자로 시작하면 안 된다.**
@@ -37,7 +43,7 @@
     quibusdam!
 ```
 
-
+![class](https://raw.githubusercontent.com/likedemian/Private-Studies/master/Personals/class.png)
 
 
 
