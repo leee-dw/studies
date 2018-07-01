@@ -13,7 +13,8 @@ export class MovieData {
     return `${this.url + movieId + this.key}&language=${language}`
   }
 
-  getTrailerURL(movieId, language) {
-    return `${this.url + movieId}/videos${this.key}&language=${language}`;
+  getTrailerURL(movieId) {
+    return `${this.url + movieId}/videos${this.key}`;
   }
+
 }
